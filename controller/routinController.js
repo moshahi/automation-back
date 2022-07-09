@@ -118,7 +118,7 @@ exports.routinsList = async (req, res) => {
 };
 exports.currentRoutins = async (req, res) => {
   let finalRQ = [];
-  await RoutinsRQ.find({})
+  await RoutinsRQ.find({ confirm: "none" })
     .populate("userCreated")
     .then((resualt) => {
       resualt.forEach((RQ) => {
@@ -170,4 +170,65 @@ exports.showRoutins = async (req, res) => {
         .status(500)
         .json({ success: false, message: "اروری از سمت سرور رخ داده است" });
     });
+};
+
+exports.routinConfirmation = async (req, res) => {
+  console.log("req.body:", req.body);
+
+  let routins = [];
+  var confirmationArr = [];
+  var messageArr = [];
+
+  await RoutinsRQ.findById(req.body.routinsID).then((result) => {
+    confirmationArr.push(result.routin.confirmationUsers);
+    routins.push(result.routin);
+    // console.log("result:", result);
+    let newMSG = { userID: req.body.id, message: req.body.text };
+    messageArr = result.messages;
+    messageArr.push(newMSG);
+  });
+
+  console.log("confirmationArr: ", confirmationArr);
+  console.log("messageArr: ", messageArr);
+
+  if (req.body.confirm == "confirm") {
+    confirmationArr.forEach((item) => {
+      if (item.confirm === false && item.userID === req.body.id) {
+        confirmationArr.push(item);
+      }
+    });
+    if (confirmationArr.length > 0) {
+      confirmationArr[0][0].confirm = true;
+    }
+    routins.confirmationUsers = confirmationArr;
+
+    await RoutinsRQ.findByIdAndUpdate(req.body.routinsID, {
+      routin: routins[0],
+      messages: messageArr,
+    })
+      .then((resualt) => {
+        res.status(200).json({ message: "روال با موفقیت تایید شد." });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json({
+          message: "ظاهرا مشکلی رخ داده است . با مدیر سیستم تماس بگیرید.",
+        });
+      });
+  }
+
+  if (req.body.confirm == "disapproval") {
+    await RoutinsRQ.findByIdAndUpdate(req.body.routinsID, {
+      confirm: "disapproval",
+    })
+      .then((resualt) => {
+        res.status(200).json({ message: "روال با موفقیت عدم تایید شد." });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json({
+          message: "ظاهرا مشکلی رخ داده است . با مدیر سیستم تماس بگیرید.",
+        });
+      });
+  }
 };

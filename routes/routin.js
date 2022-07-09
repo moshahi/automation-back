@@ -34,4 +34,8 @@ router.post("/routinsrq", routinController.currentRoutins);
 //* route /routins/showRoutins/:RQID
 router.get("/showRoutins/:RQID", routinController.showRoutins);
 
+//?confirm or disapproval routins
+//* route /routins/confirmation
+router.post("/confirmation", routinController.routinConfirmation);
+
 module.exports = router;

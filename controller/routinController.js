@@ -173,7 +173,7 @@ exports.showRoutins = async (req, res) => {
 };
 
 exports.routinConfirmation = async (req, res) => {
-  console.log("req.body:", req.body);
+  // console.log("req.body:", req.body);
 
   let routins = [];
   var confirmationArr = [];
@@ -183,23 +183,25 @@ exports.routinConfirmation = async (req, res) => {
     confirmationArr.push(result.routin.confirmationUsers);
     routins.push(result.routin);
     // console.log("result:", result);
-    let newMSG = { userID: req.body.id, message: req.body.text };
+    let newMSG = {
+      userID: req.body.id,
+      message: req.body.text,
+      date: Date.now(),
+    };
     messageArr = result.messages;
     messageArr.push(newMSG);
   });
 
-  console.log("confirmationArr: ", confirmationArr);
   console.log("messageArr: ", messageArr);
 
   if (req.body.confirm == "confirm") {
-    confirmationArr.forEach((item) => {
-      if (item.confirm === false && item.userID === req.body.id) {
-        confirmationArr.push(item);
-      }
-    });
-    if (confirmationArr.length > 0) {
-      confirmationArr[0][0].confirm = true;
-    }
+    let filteredFalseConfirm = confirmationArr[0].filter(
+      (item) => item.confirm === false
+    );
+
+    filteredFalseConfirm[0].confirm = true;
+    // console.log("test:", test);
+    // console.log("confirmationArr: ", confirmationArr[0]);
     routins.confirmationUsers = confirmationArr;
 
     await RoutinsRQ.findByIdAndUpdate(req.body.routinsID, {
